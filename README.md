@@ -10,15 +10,20 @@ Follow these steps to install Miniconda3 on macOS:
    ```sh
    mkdir -p ~/miniconda3
 2. Download the Miniconda3 installation script: 
-curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o ~/miniconda3/miniconda.sh
+   ```sh
+   curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o ~/miniconda3/miniconda.sh
 3. Run the installation script:
-bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+   ```sh
+   bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
 4. Remove the installation script:
-rm ~/miniconda3/miniconda.sh
+   ```sh
+   rm ~/miniconda3/miniconda.sh
 5. Initialize Miniconda3 with your shell:
-~/miniconda3/bin/conda init zsh
+   ```sh
+   ~/miniconda3/bin/conda init zsh
 6. Reload the shell configuration:
-source ~/.zshrc
+   ```sh
+   source ~/.zshrc
 
 ## Getting Started
 
