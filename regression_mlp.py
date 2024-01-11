@@ -1,13 +1,12 @@
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
 from sklearn.model_selection import ParameterSampler
-import warnings
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
 
+import warnings
 import numpy as np
-import matplotlib.pyplot as plt
 np.random.seed(42)
 
 # Load and split the data
@@ -20,7 +19,9 @@ l_num_hidden = [(5,), (10,), (20,), (50,), (5, 2,), (10, 5,), (20, 20,)]
 param_space = {
     'hidden_layer_sizes': l_num_hidden,
     'activation': ['identity', 'logistic', 'tanh', 'relu'],
-    'solver': ['lbfgs', 'sgd', 'adam']
+    'alpha': [1e-4, 1e-3, 1e-2, 1e-1, 1e0],
+    'max_iter': [1000],
+    'solver': ['lbfgs']
 }
 
 # Specify the number of random samples
@@ -41,7 +42,7 @@ r2_results = []
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 for i, params in enumerate(param_samples):
-    temp_mlp = MLPRegressor(hidden_layer_sizes=params['hidden_layer_sizes'], max_iter=1000, alpha=0.0001)
+    temp_mlp = MLPRegressor(**params)
 
     # Inside the loop where models are trained
     print(f'Training model with parameters: {params}...')
@@ -55,7 +56,11 @@ for i, params in enumerate(param_samples):
     l_models.append(temp_mlp)
 
     y_pred_valid = temp_mlp.predict(data_X_valid)
+    # Evaluate the best model on the validation set
     temp_rmse_valid = mean_squared_error(data_y_valid, y_pred_valid)
+    temp_mae_valid = mean_absolute_error(data_y_valid, y_pred_valid)
+    temp_mape_valid = mean_absolute_percentage_error(data_y_valid, y_pred_valid)
+    temp_r2_valid = r2_score(data_y_valid, y_pred_valid)
 
     l_perform_valid.append(temp_rmse_valid)
 
@@ -70,26 +75,6 @@ for i, params in enumerate(param_samples):
 # After the loop
 print('Training completed. Evaluating models...')
 
-# Plotting the results
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-fig.suptitle('Model Performance on Validation Set', fontsize=16)
-
-metrics = {'RMSE': rmse_results, 'MAE': mae_results, 'MAPE': mape_results, 'R2 Score': r2_results}
-
-# Use the correct x-axis values based on the sampled parameters
-x_values = [str(params['hidden_layer_sizes']) for params in param_samples]
-
-for i, (metric, values) in enumerate(metrics.items()):
-    ax = axes[i // 2, i % 2]
-    ax.bar(range(len(param_samples)), values, color='skyblue')
-    ax.set_xticks(range(len(param_samples)))
-    ax.set_xticklabels(x_values, rotation=45, ha='right')
-    ax.set_title(metric)
-    ax.set_ylabel(metric)
-
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.show()
-
 # Identify the best model based on the minimum RMSE
 best_model_index = np.argmin(rmse_results)
 best_model = l_models[best_model_index]
@@ -98,8 +83,8 @@ best_model = l_models[best_model_index]
 best_model_hyperparameters = param_samples[best_model_index]
 print(f'Best Model Hyperparameters:')
 print(f'Hidden Layer Sizes: {best_model_hyperparameters["hidden_layer_sizes"]}')
+print(f'Alpha: {best_model_hyperparameters["alpha"]}')
 print(f'Activation: {best_model_hyperparameters["activation"]}')
-print(f'Solver: {best_model_hyperparameters["solver"]}')
 
 # Predict on the test set with the best model
 y_pred_test = best_model.predict(data_X_test)

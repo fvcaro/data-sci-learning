@@ -186,3 +186,5 @@ Temporary Items
 # Exclude XML and IML files
 *.xml
 *.iml
+
+.idea/

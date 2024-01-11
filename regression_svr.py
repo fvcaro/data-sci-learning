@@ -16,8 +16,7 @@ data_X, data_y = fetch_california_housing(return_X_y=True, as_frame=True)
 data_X_trval, data_X_test, data_y_trval, data_y_test = train_test_split(data_X, data_y, test_size=0.20, shuffle=True)
 data_X_train, data_X_valid, data_y_train, data_y_valid = train_test_split(data_X_trval, data_y_trval, test_size=0.25, shuffle=True)
 
-kernel = 'rbf'
-param_grid = {'gamma': [1e-1, 1e0, 1e1], 'C': [1e-1, 1e0, 1e1]}
+param_grid = {'kernel': ['rbf'], 'gamma': [1e-1, 1e0, 1e1], 'C': [1e-1, 1e0, 1e1]}
 
 # Extract values from the param_grid
 l_gammas = param_grid['gamma']
@@ -41,7 +40,7 @@ for i, params in enumerate(ParameterGrid(param_grid), 1):
     
     print(f'Training model {i}/{len(ParameterGrid(param_grid))} with gamma={gamma}, C={C}')
     
-    temp_svr = svm.SVR(kernel=kernel, gamma=gamma, C=C)
+    temp_svr = svm.SVR(**params)
     
     try:
         temp_svr.fit(data_X_train, data_y_train)
