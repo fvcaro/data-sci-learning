@@ -1,63 +1,60 @@
 from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import RocCurveDisplay
-from sklearn.metrics import roc_curve
-from sklearn.metrics import auc
+from sklearn.metrics import accuracy_score, recall_score, confusion_matrix, precision_score, roc_auc_score
+from sklearn.metrics import RocCurveDisplay, roc_curve, auc
 import matplotlib.pyplot as plt
 
-skf = StratifiedKFold(n_splits=3)
+# Load the Breast Cancer dataset
 data = load_breast_cancer()
 dataX = data.data
 datay = data.target
 
-for i, (train_index, test_index) in enumerate(skf.split(dataX, datay)):
-    print(f"Fold {i}:")
+# Create a StratifiedKFold object for cross-validation
+skf_in = StratifiedKFold(n_splits=2)
+skf_out = StratifiedKFold(n_splits=3)
+
+# Define the hyperparameter space
+param_grid = {
+    'hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 50)],
+    'max_iter': [500, 1000, 1500],
+    'alpha': [0.0001, 0.001, 0.01],
+}
+
+# Create an MLPClassifier
+model = MLPClassifier(random_state=42)
+
+# Create a GridSearchCV object
+grid_search = GridSearchCV(model, param_grid, cv=skf_in, scoring='roc_auc')
+
+# Loop through the folds
+for i, (train_index, test_index) in enumerate(skf_out.split(dataX, datay)):
+    print(f"Fold {i+1}:")
+
+    # Split the data into training and test sets
     X_train, X_test = dataX[train_index, :], dataX[test_index, :]
     y_train, y_test = datay[train_index], datay[test_index]
 
-    # Replace this with your own hyperparameter settings
-    model = MLPClassifier(hidden_layer_sizes=(100, 50), max_iter=1000, random_state=42)
-    # model = MLPClassifier()
-    # Training the MLP model
-    model.fit(X_train, y_train)
+    # Fit the GridSearchCV object on the training data
+    grid_search.fit(X_train, y_train)
+
+    # Get the best model from the grid search
+    best_model = grid_search.best_estimator_
+    # Print the best hyperparameters found by GridSearchCV
+    print("Best Hyperparameters:", grid_search.best_params_)
 
     # Make predictions on the test set
-    y_pred = model.predict(X_test)
-    y_pred_prob = model.predict_proba(X_test)[:, 1]  # Probability estimates for the positive class
+    y_pred = best_model.predict(X_test)
+    y_pred_prob = best_model.predict_proba(X_test)[:, 1]  # Probability estimates for the positive class
 
-    # Calculate and print accuracy
-    accuracy = accuracy_score(y_test, y_pred)
-    print(f"Accuracy: {accuracy}")
-
-    # Calculate and print sensitivity (recall)
-    sensitivity = recall_score(y_test, y_pred)
-    print(f"Sensitivity (Recall): {sensitivity}")
-
-    # Calculate confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    tn, fp, fn, tp = cm.ravel()
-
-    # Calculate and print specificity
-    specificity = tn / (tn + fp)
-    print(f"Specificity: {specificity}")
-
-    # Calculate and print precision
-    precision = precision_score(y_test, y_pred)
-    print(f"Precision: {precision}")
-
-    # Calculate and print roc_auc_score
+    # Calculate and print ROC AUC Score
     roc_auc = roc_auc_score(y_test, y_pred_prob)
     print(f"ROC AUC Score: {roc_auc}")
 
+    # Calculate ROC curve and plot
     fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
     roc_auc_plot = auc(fpr, tpr)
-    display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc_plot, estimator_name = 'example estimator')
+    display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc_plot, estimator_name='Best MLP Classifier')
     display.plot()
     plt.show()
 
