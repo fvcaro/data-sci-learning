@@ -30,6 +30,8 @@ grid_search = GridSearchCV(model, param_grid, cv=skf_in, scoring='roc_auc')
 # Loop through the folds
 for i, (train_index, test_index) in enumerate(skf_out.split(dataX, datay)):
     print(f"Fold {i+1}:")
+    print(f"  Train: index={train_index}")
+    print(f"  Test:  index={test_index}")
 
     # Split the data into training and test sets
     X_train, X_test = dataX[train_index, :], dataX[test_index, :]
@@ -41,7 +43,7 @@ for i, (train_index, test_index) in enumerate(skf_out.split(dataX, datay)):
     # Get the best model from the grid search
     best_model = grid_search.best_estimator_
     # Print the best hyperparameters found by GridSearchCV
-    print("Best Hyperparameters:", grid_search.best_params_)
+    print("Best Hyperparameters: ", grid_search.best_params_)
 
     # Make predictions on the test set
     y_pred = best_model.predict(X_test)
