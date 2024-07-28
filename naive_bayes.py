@@ -1,43 +1,70 @@
-# Import necessary libraries
-from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score
+import numpy as np
 import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
 
-# Example dataset (replace this with your actual dataset)
-data = {
-    'Fever': [37.5, 39.0, 40.0, 37.0, 38.5, 41.0],
-    'Cough_Severity': [2, 3, 5, 1, 4, 5],
-    'Breathing_Difficulty': [1, 3, 5, 0, 4, 5],
-    'Fatigue_Level': [1, 3, 4, 1, 3, 5],
-    'Blood_Pressure': ['120/80', '130/85', '140/90', '115/75', '135/88', '150/95'],
-    'Oxygen_Saturation': [98, 94, 90, 99, 92, 88],
-    'Classification': ['Soft', 'Moderate', 'Grave', 'Soft', 'Moderate', 'Grave']
-}
+# Load the iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
 
-# Create a DataFrame
-df = pd.DataFrame(data)
-
-# Assume you need to convert 'Blood_Pressure' into numerical feature(s), you'd typically do this:
-df['Blood_Pressure'] = df['Blood_Pressure'].apply(lambda x: float(x.split('/')[0]))  # Example: Taking only systolic value
-
-# Separate features and target variable
-X = df.drop('Classification', axis=1)
-y = df['Classification']
-
-# Split data into training and testing sets
+# Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Initialize Gaussian Naive Bayes classifier
+# Initialize and train the scikit-learn Gaussian Naive Bayes classifier
 gnb = GaussianNB()
-
-# Train the classifier
 gnb.fit(X_train, y_train)
+y_pred_sklearn = gnb.predict(X_test)
+accuracy_sklearn = accuracy_score(y_test, y_pred_sklearn)
 
-# Predict on the test set
-y_pred = gnb.predict(X_test)
+# Manual implementation of Gaussian Naive Bayes
+class ManualGaussianNB:
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        self.means = {}
+        self.variances = {}
+        self.priors = {}
+        
+        for c in self.classes:
+            X_c = X[y == c]
+            self.means[c] = np.mean(X_c, axis=0)
+            self.variances[c] = np.var(X_c, axis=0)
+            self.priors[c] = X_c.shape[0] / X.shape[0]
+    
+    def gaussian_probability(self, x, mean, var):
+        coefficient = 1 / np.sqrt(2 * np.pi * var)
+        exponent = np.exp(-((x - mean) ** 2) / (2 * var))
+        return coefficient * exponent
+    
+    def predict(self, X):
+        predictions = []
+        for x in X:
+            posteriors = []
+            for c in self.classes:
+                prior = np.log(self.priors[c])
+                conditional = np.sum(np.log(self.gaussian_probability(x, self.means[c], self.variances[c])))
+                posterior = prior + conditional
+                posteriors.append(posterior)
+            predictions.append(np.argmax(posteriors))
+        return predictions
 
-# Evaluate the classifier
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
+# Train and predict using the manual Gaussian Naive Bayes classifier
+manual_gnb = ManualGaussianNB()
+manual_gnb.fit(X_train, y_train)
+y_pred_manual = manual_gnb.predict(X_test)
+accuracy_manual = accuracy_score(y_test, y_pred_manual)
+
+# Print the results
+print(f"Accuracy (scikit-learn): {accuracy_sklearn}")
+print(f"Accuracy (manual): {accuracy_manual}")
+
+# Create a DataFrame to compare actual vs. predicted values
+comparison = pd.DataFrame({
+    'Actual': y_test,
+    'Predicted_sklearn': y_pred_sklearn,
+    'Predicted_manual': y_pred_manual
+})
+
+print(comparison)
