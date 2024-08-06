@@ -8,6 +8,8 @@ iris = load_iris()
 X = iris.data
 y = iris.target
 
+x_test = [[6.1, 2.8, 4.7, 1.2]]
+
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -15,6 +17,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 gnb = GaussianNB()
 gnb.fit(X_train, y_train)
 y_pred_sklearn = gnb.predict(X_test)
+
+print(gnb.predict_proba(x_test))
 
 # Calculate accuracy
 accuracy_sklearn = accuracy_score(y_test, y_pred_sklearn)

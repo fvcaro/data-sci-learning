@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 from matplotlib.image import imread
-import numpy as np
 import warnings
 from sklearn.cluster import KMeans
 
@@ -19,7 +18,7 @@ plt.show()
 X = image.reshape(-1,3)
 print(X.shape)
 
-kmeans = KMeans(n_clusters = 8).fit(X)
+kmeans = KMeans(n_clusters = 3).fit(X)
 
 print(kmeans.cluster_centers_)
 

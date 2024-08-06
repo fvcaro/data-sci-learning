@@ -46,20 +46,24 @@ def gaussian_probability(x, mean, var):
 
 # Calculate the posterior probability for each class
 def calculate_posterior(x):
+    log_posteriors = []
     posteriors = []
     for y_class in classes:
         print(f'Class {y_class}: ')
-        prior = np.log(priors[y_class])
+        log_prior = np.log(priors[y_class])
         print(f'x:\n {x}: ')
         print(f'means[y_class]:\n {means[y_class]}: ')
         print(f'variances[y_class]:\n {variances[y_class]}: ')
         likelihood = gaussian_probability(x, means[y_class], variances[y_class])
         print(f'likelihood:\n {likelihood}: ')
-        conditional = np.sum(np.log(likelihood))
-        posterior = prior + conditional
-        posteriors.append(posterior)
-        # print(f'\nPosterior for class {y_class} for x = {x}: {posterior}')
-    return np.argmax(posteriors)
+        log_conditional = np.sum(np.log(likelihood))
+        log_posterior = log_prior + log_conditional
+        log_posteriors.append(log_posterior)
+        posteriors.append(np.exp(log_posterior))
+
+    norm_posteriors = posteriors / np.sum(posteriors)
+    print(f'\nPosterior normalized for x = {x}: {norm_posteriors}')    
+    return np.argmax(log_posteriors), norm_posteriors
 
 # Predict for the entire test set
 y_pred_manual = [calculate_posterior(x) for x in X_test]
